@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
+/* Design tokens. Dark-first, Apple-style: near-black canvas, soft glass, one champagne accent. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #000000;
+  --bg-elev: #0d0d0c;
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-strong: rgba(255, 255, 255, 0.09);
+  --border: rgba(255, 255, 255, 0.1);
+  --fg: #f1ede6;
+  --fg-muted: #a09c94;
+  --fg-dim: #6b6862;
+  --accent: #cdb48c; /* champagne: the only accent */
+  --accent-2: #8d887e;
+  --accent-3: #e9e2d3;
+  --ease-apple: cubic-bezier(0.28, 0.11, 0.32, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-line: var(--border);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-dim: var(--fg-dim);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --font-sans: var(--font-body), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: var(--font-serif), "Iowan Old Style", Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--bg);
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(205, 180, 140, 0.3);
+}
+
+/* Lenis smooth-scroll requirements */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Reusable pieces */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+/* The emphasised word in a headline: italic serif in the accent colour. */
+.accent-word {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.h-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
