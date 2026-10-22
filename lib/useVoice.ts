@@ -63,11 +63,14 @@ export function useVoice(sessionId: string, onAnswer: (question: string, reply: 
     const u = new SpeechSynthesisUtterance(text);
     if (voice) u.voice = voice;
     u.rate = 1.03;
-    const done = () => { synth.current = false; if (!mutedRef.current) void setMic(true); };
+    const done = () => {
+      synth.current = false;
+      if (!mutedRef.current) void setMic(true);
+    };
     u.onend = done; u.onerror = done;
     synth.current = true;
     thinking.current = false;
-    void setMic(false);                 // don't let the mic hear the speaker
+    if (mutedRef.current) void setMic(false);
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
   }, [setMic]);

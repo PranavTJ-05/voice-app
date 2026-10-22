@@ -61,15 +61,15 @@ export default function Hero() {
             aria-hidden
             className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[radial-gradient(closest-side,rgba(0,0,0,0.78),transparent)]"
           />
-          <p data-hero-in className="glass mb-6 rounded-full px-4 py-1.5 text-xs font-medium text-muted">
+          <p data-hero-in className="glass mb-6 rounded-full px-4 py-1.5 text-sm font-medium text-muted">
             Voice agents as a service
           </p>
-          <h1 data-hero-in className="h-display max-w-4xl text-5xl sm:text-7xl md:text-7xl">
+          <h1 data-hero-in className="h-display max-w-5xl text-6xl sm:text-8xl md:text-[5.4rem]">
             Meet Tara.
             <br />
             <span className="accent-word">Your business, out loud.</span>
           </h1>
-          <p data-hero-in className="mt-6 max-w-xl text-lg text-[#c7c7cc] md:text-xl">
+          <p data-hero-in className="mt-6 max-w-2xl text-xl text-[#c7c7cc] md:text-2xl">
             A human-sounding voice agent that answers from your own documents, stays on topic, and goes live on your
             site in minutes.
           </p>

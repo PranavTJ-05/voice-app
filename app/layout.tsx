@@ -1,21 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Serif, Instrument_Sans, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
-
-const serif = Instrument_Serif({
-  variable: "--font-serif",
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  display: "swap",
-});
-
-const sans = Instrument_Sans({
-  variable: "--font-body",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -34,7 +20,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className={`${geistMono.variable} antialiased`}>
       <body className="min-h-screen">
         <SmoothScroll>{children}</SmoothScroll>
       </body>

@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getConfig, openPlayground, sendChat, sessionId, type AppConfig, type Reply } from "@/lib/tara";
+import { getConfig, sendChat, sessionId, type AppConfig, type Reply } from "@/lib/tara";
 import { useVoice } from "@/lib/useVoice";
 
 const VoiceOrb = dynamic(() => import("./three/VoiceOrb"), { ssr: false });
@@ -276,7 +276,7 @@ function Session({ onClose, open }: { onClose: () => void; open: boolean }) {
   );
 }
 
-/** "Try it yourself" section plus the modal it opens. Anything on the page can open it via openPlayground(). */
+/** Modal chat session; anything on the page can open it via openPlayground(). */
 export default function Playground() {
   const [open, setOpen] = useState(false);
   const [everOpened, setEverOpened] = useState(false);
@@ -306,22 +306,6 @@ export default function Playground() {
 
   return (
     <>
-      <section id="try" className="px-6 py-32 text-center">
-        <p className="mb-5 text-xs font-medium uppercase tracking-[0.22em] text-accent">Try it yourself</p>
-        <h2 className="h-display mx-auto max-w-3xl text-5xl sm:text-7xl">
-          Ask Tara <span className="accent-word">anything.</span>
-        </h2>
-        <p className="mx-auto mt-5 max-w-lg text-lg text-muted">
-          This is the real agent, running live. Type a question, or tap the mic and just talk.
-        </p>
-        <button
-          onClick={openPlayground}
-          className="mt-10 rounded-full bg-fg px-8 py-3.5 text-base font-medium text-black transition-transform hover:scale-[1.03]"
-        >
-          Start a conversation
-        </button>
-      </section>
-
       {everOpened && (
         <div
           className={`fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-3 backdrop-blur-2xl transition-opacity duration-500 sm:p-6 ${

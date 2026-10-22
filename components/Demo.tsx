@@ -3,38 +3,134 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { openPlayground } from "@/lib/tara";
 
-/** Scripted car-booking conversation. Audio clips were generated once with Orpheus (voice "autumn"). */
-const SCRIPT = [
-  { from: "user", text: "Hi, I need a car for this Saturday, around 10 am." },
+type ScriptStep =
+  | { from: "user"; text: string }
+  | { from: "tara"; text: string; secs: number; clip?: string };
+
+type Scenario = {
+  id: string;
+  label: string;
+  organization: string;
+  intro: string;
+  script: readonly ScriptStep[];
+};
+
+/** Demo scripts by industry. Car-rental includes voice clips; others use synchronized typing playback. */
+const SCENARIOS: readonly Scenario[] = [
   {
-    from: "tara",
-    text: "Of course! Saturday at ten works. Are you after a compact for the city, or something roomier for a road trip?",
-    clip: "/demo/tara-1.wav",
-    secs: 8.3,
+    id: "car-rental",
+    label: "Car Rental Platform",
+    organization: "DriveEase Rentals",
+    intro: "Watch Tara handle a real car-rental booking, typed or spoken, with answers pulled from the business's own information.",
+    script: [
+      { from: "user", text: "Hi, I need a car for this Saturday, around 10 am." },
+      {
+        from: "tara",
+        text: "Of course! Saturday at ten works. Are you after a compact for the city, or something roomier for a road trip?",
+        clip: "/demo/tara-1.wav",
+        secs: 8.3,
+      },
+      { from: "user", text: "Something roomy. We're four people with luggage." },
+      {
+        from: "tara",
+        text: "Perfect. I'd suggest our Toyota Highlander. It seats seven, and it's one hundred twelve dollars a day. Shall I book it for Saturday?",
+        clip: "/demo/tara-2.wav",
+        secs: 10,
+      },
+      { from: "user", text: "Yes, please. Is insurance included?" },
+      {
+        from: "tara",
+        text: "Yes, basic coverage is included. You're all set. A Highlander, Saturday at ten. I've sent the confirmation to your email.",
+        clip: "/demo/tara-3.wav",
+        secs: 8.4,
+      },
+    ],
   },
-  { from: "user", text: "Something roomy. We're four people with luggage." },
   {
-    from: "tara",
-    text: "Perfect. I'd suggest our Toyota Highlander. It seats seven, and it's one hundred twelve dollars a day. Shall I book it for Saturday?",
-    clip: "/demo/tara-2.wav",
-    secs: 10,
+    id: "dentistry",
+    label: "Dentistry",
+    organization: "BrightSmile Dental",
+    intro: "See a clinic-style conversation flow with appointment slots, treatment prep, and quick patient answers.",
+    script: [
+      { from: "user", text: "I have tooth pain and need an appointment this week." },
+      {
+        from: "tara",
+        text: "I'm sorry you're in pain. We can see you Thursday at 3:30 pm or Friday at 11:00 am. Which works better for you?",
+        secs: 8.1,
+      },
+      { from: "user", text: "Thursday works. Do I need to prepare anything?" },
+      {
+        from: "tara",
+        text: "Please arrive ten minutes early and avoid painkillers for two hours before the exam if possible. I'll reserve Thursday at 3:30 now.",
+        secs: 8.6,
+      },
+      { from: "user", text: "Great, thank you." },
+      {
+        from: "tara",
+        text: "Booked. You'll get a confirmation text and a reminder on the day of your visit.",
+        secs: 5.8,
+      },
+    ],
   },
-  { from: "user", text: "Yes, please. Is insurance included?" },
   {
-    from: "tara",
-    text: "Yes, basic coverage is included. You're all set. A Highlander, Saturday at ten. I've sent the confirmation to your email.",
-    clip: "/demo/tara-3.wav",
-    secs: 8.4,
+    id: "feedback-ai",
+    label: "Feedback AI",
+    organization: "LoopLens Insights",
+    intro: "Preview how an AI feedback assistant captures sentiment, tags themes, and proposes next actions.",
+    script: [
+      { from: "user", text: "Users keep saying onboarding is confusing. Can you summarize the feedback?" },
+      {
+        from: "tara",
+        text: "Absolutely. The top concerns are unclear first-step guidance, too many setup fields, and missing progress indicators.",
+        secs: 7.8,
+      },
+      { from: "user", text: "What should we fix first?" },
+      {
+        from: "tara",
+        text: "Start with a three-step onboarding checklist and add inline help text on account setup. Those two changes should reduce drop-off fastest.",
+        secs: 8.9,
+      },
+      { from: "user", text: "Can you create action items for the team?" },
+      {
+        from: "tara",
+        text: "Done. I drafted product, design, and analytics tasks with owners and target dates for your sprint board.",
+        secs: 7,
+      },
+    ],
+  },
+  {
+    id: "library-assist",
+    label: "Library Assist",
+    organization: "City Library Helpdesk",
+    intro: "Try a public-service style assistant that helps with books, due dates, and account support.",
+    script: [
+      { from: "user", text: "Can you help me find beginner books on machine learning?" },
+      {
+        from: "tara",
+        text: "Sure. I found three good starters: Hands-On Machine Learning, AI for Everyone, and Practical Statistics for Data Science.",
+        secs: 8,
+      },
+      { from: "user", text: "Are any available today at the downtown branch?" },
+      {
+        from: "tara",
+        text: "Yes. Two are available now, and one can be transferred in one business day. Want me to place holds for you?",
+        secs: 8.2,
+      },
+      { from: "user", text: "Yes, please place the holds." },
+      {
+        from: "tara",
+        text: "All set. I placed the holds and sent pickup details to your library account email.",
+        secs: 6.2,
+      },
+    ],
   },
 ] as const;
 
 const TYPE_MS = 38;
 const THINK_MS = 900;
 const GAP_MS = 700;
-const TOTAL_MS = SCRIPT.reduce(
-  (t, s) => t + (s.from === "user" ? s.text.length * TYPE_MS + 500 : THINK_MS + s.secs * 1000 + GAP_MS),
-  0,
-);
+const totalMsFor = (script: readonly ScriptStep[]) =>
+  script.reduce((t, s) => t + (s.from === "user" ? s.text.length * TYPE_MS + 500 : THINK_MS + s.secs * 1000 + GAP_MS), 0);
 
 type Shown = { from: "user" | "tara"; text: string; clip?: number };
 type Phase = "idle" | "playing" | "done";
@@ -94,26 +190,74 @@ function PlayIcon({ playing }: { playing: boolean }) {
 
 export default function Demo() {
   const root = useRef<HTMLElement>(null);
+  const [scenarioId, setScenarioId] = useState(SCENARIOS[0].id);
+  const scenario = SCENARIOS.find((s) => s.id === scenarioId) ?? SCENARIOS[0];
+  const script = scenario.script;
+  const totalMs = totalMsFor(script);
   const [msgs, setMsgs] = useState<Shown[]>([]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [paused, setPaused] = useState(false);
-  const [sound, setSound] = useState(false);
+  const [sound, setSound] = useState(true);
   const [progress, setProgress] = useState(0);
 
   // Mutable playback state shared with the async runner.
   const runId = useRef(0);
   const pausedRef = useRef(false);
-  const soundRef = useRef(false);
+  const soundRef = useRef(true);
   const elapsed = useRef(0);
   const audio = useRef<HTMLAudioElement | null>(null);
   const ctx = useRef<AudioContext | null>(null);
   const analyser = useRef<AnalyserNode | null>(null);
   const buf = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const synth = useRef<SpeechSynthesis | null>(null);
+  const utterance = useRef<SpeechSynthesisUtterance | null>(null);
   const audioPlaying = useRef(false);
   const started = useRef(false);
+
+  const closeAudioGraph = useCallback(async () => {
+    const c = ctx.current;
+    ctx.current = null;
+    audio.current = null;
+    analyser.current = null;
+    buf.current = null;
+    if (!c || c.state === "closed") return;
+    try {
+      await c.close();
+    } catch {
+      // Ignore race conditions where the context is closed between state check and close call.
+    }
+  }, []);
+
+  const stopSpeech = useCallback(() => {
+    utterance.current = null;
+    if (synth.current) synth.current.cancel();
+  }, []);
+
+  const speakText = useCallback((text: string) => {
+    if (!synth.current) return Promise.resolve(false);
+    return new Promise<boolean>((resolve) => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1;
+      u.pitch = 1;
+      u.onend = () => {
+        audioPlaying.current = false;
+        utterance.current = null;
+        resolve(true);
+      };
+      u.onerror = () => {
+        audioPlaying.current = false;
+        utterance.current = null;
+        resolve(false);
+      };
+      stopSpeech();
+      utterance.current = u;
+      audioPlaying.current = true;
+      synth.current?.speak(u);
+    });
+  }, [stopSpeech]);
 
   const level = useCallback(() => {
     if (audioPlaying.current && analyser.current && buf.current) {
@@ -131,7 +275,7 @@ export default function Demo() {
   }, []);
 
   const enableSound = useCallback(() => {
-    if (!ctx.current) {
+    if (!ctx.current || ctx.current.state === "closed") {
       const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const c = new AC();
       const el = new Audio();
@@ -146,7 +290,11 @@ export default function Demo() {
       analyser.current = an;
       buf.current = new Uint8Array(new ArrayBuffer(an.fftSize));
     }
-    void ctx.current.resume();
+    if (ctx.current?.state === "suspended") {
+      void ctx.current.resume().catch(() => {
+        // Resume can fail on some browsers without a user gesture; ignore and keep UI stable.
+      });
+    }
     soundRef.current = true;
     setSound(true);
   }, []);
@@ -154,16 +302,26 @@ export default function Demo() {
   const disableSound = useCallback(() => {
     soundRef.current = false;
     audio.current?.pause();
+    stopSpeech();
     audioPlaying.current = false;
     setSound(false);
-  }, []);
+  }, [stopSpeech]);
 
   const togglePause = useCallback(() => {
     const next = !pausedRef.current;
     pausedRef.current = next;
     setPaused(next);
-    if (next) audio.current?.pause();
-    else if (audioPlaying.current) void audio.current?.play();
+    if (next) {
+      audio.current?.pause();
+      if (synth.current?.speaking) synth.current.pause();
+      return;
+    }
+    if (audioPlaying.current) {
+      if (audio.current && audio.current.paused) {
+        void audio.current.play();
+      }
+      if (synth.current?.paused) synth.current.resume();
+    }
   }, []);
 
   const run = useCallback(async () => {
@@ -191,7 +349,7 @@ export default function Demo() {
         await new Promise((r) => setTimeout(r, step));
         left -= step;
         elapsed.current += step;
-        setProgress(Math.min(1, elapsed.current / TOTAL_MS));
+        setProgress(Math.min(1, elapsed.current / totalMs));
       }
       if (runId.current !== id) throw new Cancelled();
     };
@@ -199,7 +357,7 @@ export default function Demo() {
     try {
       await wait(500);
       let clipIdx = 0;
-      for (const step of SCRIPT) {
+      for (const step of script) {
         if (step.from === "user") {
           for (let i = 1; i <= step.text.length; i++) {
             setInput(step.text.slice(0, i));
@@ -219,7 +377,8 @@ export default function Demo() {
 
           let ended: Promise<void> = Promise.resolve();
           const el = audio.current;
-          if (soundRef.current && el) {
+          let spokeWithClip = false;
+          if (soundRef.current && el && step.clip) {
             el.src = step.clip;
             ended = new Promise<void>((resolve) => {
               el.onended = () => {
@@ -234,9 +393,14 @@ export default function Demo() {
             try {
               await el.play();
               audioPlaying.current = true;
+              spokeWithClip = true;
             } catch {
               audioPlaying.current = false;
             }
+          }
+
+          if (soundRef.current && !spokeWithClip) {
+            ended = speakText(step.text).then(() => undefined);
           }
 
           // Reveal the words across the clip length, in step with the voice.
@@ -260,7 +424,7 @@ export default function Demo() {
     } catch (e) {
       if (!(e instanceof Cancelled)) throw e;
     }
-  }, []);
+  }, [script, totalMs]);
 
   const cancel = useCallback(() => {
     runId.current++;
@@ -268,6 +432,7 @@ export default function Demo() {
 
   // Start once, when the demo is mostly on screen.
   useEffect(() => {
+    synth.current = typeof window !== "undefined" ? window.speechSynthesis : null;
     const el = root.current;
     if (!el) return;
     const io = new IntersectionObserver(
@@ -284,15 +449,25 @@ export default function Demo() {
       io.disconnect();
       cancel();
       audio.current?.pause();
-      void ctx.current?.close();
+      stopSpeech();
+      void closeAudioGraph();
     };
-  }, [run, cancel]);
+  }, [run, cancel, stopSpeech, closeAudioGraph]);
 
   const replay = () => {
     audio.current?.pause();
+    stopSpeech();
     audioPlaying.current = false;
     void run();
   };
+
+  useEffect(() => {
+    if (!started.current) return;
+    audio.current?.pause();
+    stopSpeech();
+    audioPlaying.current = false;
+    void run();
+  }, [scenarioId, run, stopSpeech]);
 
   const tryIt = () => {
     openPlayground();
@@ -304,13 +479,29 @@ export default function Demo() {
     <section ref={root} id="demo" className="relative px-4 py-28 sm:px-6">
       <div className="mx-auto max-w-5xl text-center">
         <p className="mb-5 text-xs font-medium uppercase tracking-[0.22em] text-accent">See it in action</p>
-        <h2 className="h-display text-5xl sm:text-7xl">
+        <h2 className="h-display text-6xl sm:text-8xl">
           A conversation that <span className="accent-word">sounds human.</span>
         </h2>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-muted">
-          Watch Tara handle a real car-rental booking, typed or spoken, with answers pulled from the business&apos;s
-          own information.
+        <p className="mx-auto mt-5 max-w-2xl text-xl text-muted">
+          {scenario.intro}
         </p>
+      </div>
+
+      <div className="mx-auto mt-8 flex max-w-5xl flex-wrap justify-center gap-2.5">
+        {SCENARIOS.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setScenarioId(s.id)}
+            aria-pressed={scenarioId === s.id}
+            className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+              scenarioId === s.id
+                ? "border-accent bg-accent/15 text-fg"
+                : "border-line bg-surface text-muted hover:text-fg"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
       </div>
 
       <div className="relative mx-auto mt-14 max-w-2xl">
@@ -328,12 +519,23 @@ export default function Demo() {
                   <i className="h-3 w-3 rounded-full bg-white/20" />
                   <i className="h-3 w-3 rounded-full bg-accent" />
                 </span>
-                <span className="ml-2 text-sm font-medium">DriveEase Rentals</span>
+                <span className="ml-2 text-sm font-medium">{scenario.organization}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted">
                 <span className="h-2 w-2 rounded-full bg-accent" /> Tara is online
               </div>
             </div>
+
+            {phase === "playing" && (
+              <div className="pointer-events-none absolute right-4 top-14 z-[2]">
+                <button
+                  onClick={tryIt}
+                  className="pointer-events-auto rounded-full bg-fg px-3 py-1.5 text-xs font-medium text-black shadow-md transition-transform hover:scale-[1.03]"
+                >
+                  Try yourself
+                </button>
+              </div>
+            )}
 
             {/* Conversation */}
             <div
@@ -350,7 +552,11 @@ export default function Demo() {
                   </div>
                 ) : (
                   <div key={i} className="flex">
-                    <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface-strong px-4 py-3 text-[15px] leading-snug">
+                    <div
+                      className={`max-w-[85%] rounded-2xl rounded-bl-md bg-surface-strong px-4 py-3 text-[15px] leading-snug ${
+                        speaking === m.clip && !paused ? "ai-speaking-wobble" : ""
+                      }`}
+                    >
                       <p>{m.text}</p>
                       <div className="mt-3 flex items-center gap-3 text-accent">
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/20">
