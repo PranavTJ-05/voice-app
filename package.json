@@ -6,11 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "dev:api": "cd tara/backend && uv run uvicorn app.api:app --reload --host 0.0.0.0 --port 8000",
-    "dev:voice": "cd tara/backend && uv run python -m app.agent dev",
-    "prod:api": "cd tara/backend && uv run uvicorn app.api:app --host 0.0.0.0 --port 8000",
-    "prod:voice": "cd tara/backend && uv run python -m app.agent dev"
+    "lint": "eslint"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

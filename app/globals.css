@@ -18,6 +18,14 @@
   --font-serif: "Zodiak", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Times New Roman", serif;
   --font-body: "General Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --ease-apple: cubic-bezier(0.28, 0.11, 0.32, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ink: #ece9e2;
+  --ink-dim: #8d8a83;
+  --ink-faint: #3a3936;
+  --line: rgba(236, 233, 226, 0.12);
+  --line-strong: rgba(236, 233, 226, 0.4);
+  --pad: clamp(1.25rem, 4vw, 4rem);
+  --bg-deep: #090908;
 }
 
 @theme inline {
@@ -132,4 +140,303 @@ summary {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ==========================================================================
+   Outreachorigins Navbar Style (No blur, no pill capsule wrapper)
+   ========================================================================== */
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.1rem var(--pad);
+  mix-blend-mode: difference;
+  color: var(--ink);
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand__mark {
+  width: 24px !important;
+  height: 15px !important;
+  max-width: 24px !important;
+  max-height: 15px !important;
+  flex: none !important;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.brand:hover .brand__mark {
+  transform: rotate(-12deg);
+}
+
+.brand__name {
+  font-family: var(--font-grotesk);
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+}
+
+.brand__name em {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-style: italic;
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin: 0 auto;
+}
+
+.nav__links a {
+  position: relative;
+  font-family: var(--font-grotesk);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: inherit;
+  text-decoration: none;
+  line-height: 1.6;
+}
+
+.nav__links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.nav__links a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  font-family: var(--font-grotesk);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.6;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.4s var(--ease-out), color 0.4s var(--ease-out);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pill:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.nav__burger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  position: relative;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+}
+
+.nav__burger span {
+  position: absolute;
+  left: 50%;
+  width: 16px;
+  height: 1.5px;
+  margin-left: -8px;
+  background: currentColor;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.nav__burger span:first-child {
+  top: 18px;
+}
+
+.nav__burger span:last-child {
+  top: 24px;
+}
+
+.menu-open .nav__burger span:first-child {
+  transform: translateY(3px) rotate(45deg);
+}
+
+.menu-open .nav__burger span:last-child {
+  transform: translateY(-3px) rotate(-45deg);
+}
+
+@media (max-width: 768px) {
+  .nav__links,
+  .nav__cta {
+    display: none !important;
+  }
+  .nav__burger {
+    display: block;
+  }
+}
+
+.mnav {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: var(--bg-deep);
+  display: flex;
+  flex-direction: column;
+  padding: 6rem var(--pad) 2.4rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.45s var(--ease-out), visibility 0s linear 0.45s;
+}
+
+.menu-open .mnav {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.45s var(--ease-out);
+}
+
+.mnav__label {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--ink-dim);
+  font-size: 1.05rem;
+  margin-bottom: 1.5rem;
+}
+
+.mnav__links {
+  display: flex;
+  flex-direction: column;
+}
+
+.mnav__links a,
+.mnav__links button {
+  display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-grotesk);
+  font-weight: 800;
+  font-size: clamp(2.4rem, 10vw, 4.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(1.6rem);
+  transition: transform 0.6s var(--ease-out), opacity 0.6s var(--ease-out);
+  text-align: left;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.mnav__links a i,
+.mnav__links button i {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--ink-dim);
+  letter-spacing: 0;
+}
+
+.menu-open .mnav__links a,
+.menu-open .mnav__links button {
+  opacity: 1;
+  transform: none;
+}
+
+.menu-open .mnav__links a:nth-child(1),
+.menu-open .mnav__links button:nth-child(1) {
+  transition-delay: 0.05s;
+}
+
+.menu-open .mnav__links a:nth-child(2),
+.menu-open .mnav__links button:nth-child(2) {
+  transition-delay: 0.1s;
+}
+
+.menu-open .mnav__links a:nth-child(3),
+.menu-open .mnav__links button:nth-child(3) {
+  transition-delay: 0.15s;
+}
+
+.menu-open .mnav__links a:nth-child(4),
+.menu-open .mnav__links button:nth-child(4) {
+  transition-delay: 0.2s;
+}
+
+.mnav__foot {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  opacity: 0;
+  transform: translateY(1rem);
+  transition: transform 0.6s var(--ease-out) 0.2s, opacity 0.6s var(--ease-out) 0.2s;
+}
+
+.mnav__foot a {
+  color: var(--ink);
+  font-family: var(--font-grotesk);
+  font-weight: 700;
+  border-bottom: 1px solid var(--ink);
+  text-decoration: none;
+}
+
+.menu-open .mnav__foot {
+  opacity: 1;
+  transform: none;
 }
